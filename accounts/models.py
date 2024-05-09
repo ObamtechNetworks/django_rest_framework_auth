@@ -6,6 +6,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 # Create your models here.
 
+
+AUTH_PROVIDERS = {'email':'email', 'google':'google', 'github':'github', 'facebook':'facebook'}
+
 class User(AbstractBaseUser, PermissionsMixin):
     """Create a custom User class
 
@@ -13,7 +16,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         AbstractBaseUser (class): extends its functionality for the User class
         PermissionsMixin (class): extends permission functionality for user
     """
-    
     email = models.EmailField(max_length=255, unique=True, verbose_name=_("Email Address"))
     first_name = models.CharField(max_length=255, verbose_name=_("First Name"))
     last_name = models.CharField(max_length=255, verbose_name=("Last Name"))
@@ -23,6 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
+    auth_provider = models.CharField(max_length=50, default=AUTH_PROVIDERS.get('email'))
     
     USERNAME_FIELD = 'email'
     

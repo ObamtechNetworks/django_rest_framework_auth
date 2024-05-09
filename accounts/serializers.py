@@ -35,7 +35,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
         if password != password2:
-            raise serializers.ValidationError("passwords does not match")
+            raise serializers.ValidationError(detail={'password':"passwords does not match"})
         return super().validate(attrs)
     
     def create(self, validated_data):
@@ -156,8 +156,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
             user.save()
 
             return user
-        except ValidationError:
-            raise ValidationError({"password": "Passwords do not match"})
         except Exception as e:
             raise AuthenticationFailed("An unexpected error occurred. Invalid or expired token")
 
@@ -166,17 +164,22 @@ class SetNewPasswordSerializer(serializers.Serializer):
 class LogoutUserSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
     
+    # this is for the helper method
     default_error_messages = {
         'bad_token': ('Token is invalid or has expired')
     }
     
     def validate(self, attrs):
-        self.token = attrs.get('refresh_token')
+        refresh_token = attrs.get('refresh_token')
+        try:
+            RefreshToken.verify(refresh_token)
+        except Exception as e:
+            raise ValidationError(self.fields['refresh_token'].error_messages['bad_token'])
         return attrs
     
     def save(self, **kwargs):
         try:
             token = RefreshToken(self.token)
-            token.blacklist()  # black teh token
+            token.blacklist()  # blacklist the token, more like delete token
         except TokenError:
             return self.fail('bad_token')
